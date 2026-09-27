@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import joblib
+import mlflow
 import pandas as pd
 
 
@@ -11,9 +11,9 @@ app = FastAPI(
 )
 
 
-# Load trained model
-model = joblib.load(
-    "artifacts/churn_model.pkl"
+# Load model from MLflow Model Registry
+model = mlflow.sklearn.load_model(
+    "models:/churn-prediction-model@champion"
 )
 
 
