@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import mlflow
+import joblib
 import pandas as pd
 
 
@@ -11,10 +11,8 @@ app = FastAPI(
 )
 
 
-# Load model from MLflow Model Registry
-model = mlflow.sklearn.load_model(
-    "models:/churn-prediction-model@champion"
-)
+# Load trained model
+model = joblib.load("model/churn_model.pkl")
 
 
 # Input schema
@@ -50,7 +48,6 @@ def home():
 
 @app.post("/predict")
 def predict(data: CustomerData):
-    
 
     customer_data = data.model_dump()
 
@@ -61,13 +58,11 @@ def predict(data: CustomerData):
     threshold = 0.32
 
     prediction = int(probability >= threshold)
-    
+
     result = "Churn" if prediction == 1 else "No Churn"
 
     return {
-        "churn_probability": round(
-            float(probability), 4
-        ),
+        "churn_probability": round(float(probability), 4),
         "prediction": prediction,
         "result": result
     }
