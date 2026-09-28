@@ -88,7 +88,7 @@ def train_model():
     # =========================
     # MLflow experiment
     # =========================
-    mlflow.set_experiment("Churn Prediction")
+    mlflow.set_experiment("Churn Prediction Docker")
 
     with mlflow.start_run():
 
