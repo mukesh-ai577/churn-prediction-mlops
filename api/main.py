@@ -3,12 +3,17 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+
 
 app = FastAPI(
     title="Customer Churn Prediction API",
     description="API for predicting customer churn",
     version="1.0.0"
 )
+templates = Jinja2Templates(directory="templates")
 
 
 # Load trained model
@@ -39,11 +44,12 @@ class CustomerData(BaseModel):
     TotalCharges: float
 
 
-@app.get("/")
-def home():
-    return {
-        "message": "Customer Churn Prediction API is running"
-    }
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html"
+    )
 
 
 @app.post("/predict")
