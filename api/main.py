@@ -1,28 +1,33 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import joblib
 import pandas as pd
 
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from fastapi import Request
-
 
 app = FastAPI(
     title="Customer Churn Prediction API",
-    description="API for predicting customer churn",
+    description="Predict whether a customer is likely to churn.",
     version="1.0.0"
 )
+
+# Serve CSS and other static files
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static"
+)
+
+# Load HTML templates
 templates = Jinja2Templates(directory="templates")
 
-
-# Load trained model
+# Load the trained ML model
 model = joblib.load("model/churn_model.pkl")
 
 
-# Input schema
 class CustomerData(BaseModel):
-
     gender: str
     SeniorCitizen: int
     Partner: str
@@ -52,23 +57,26 @@ def home(request: Request):
     )
 
 
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
 @app.post("/predict")
 def predict(data: CustomerData):
-
     customer_data = data.model_dump()
-
     input_data = pd.DataFrame([customer_data])
 
-    probability = model.predict_proba(input_data)[0][1]
+    probability = float(model.predict_proba(input_data)[0][1])
 
+    # Keep the same threshold used during model evaluation
     threshold = 0.32
-
     prediction = int(probability >= threshold)
 
     result = "Churn" if prediction == 1 else "No Churn"
 
     return {
-        "churn_probability": round(float(probability), 4),
+        "churn_probability": round(probability, 4),
         "prediction": prediction,
         "result": result
     }
